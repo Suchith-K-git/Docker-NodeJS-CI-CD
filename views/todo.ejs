@@ -1,153 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Todo List App</title>
-    <style>
-        body {
-            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            margin: 0;
-            padding: 0;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo — Modern 3D UI</title>
+  <!-- Soft pastel palette, Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-        h1 {
-            background: linear-gradient(135deg, #ff512f, #dd2476);
-            color: white;
-            margin: 0;
-            padding: 25px;
-            text-align: center;
-            font-size: 28px;
-            letter-spacing: 1px;
-            text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
-            border-bottom: 4px solid rgba(255,255,255,0.2);
-        }
+  <style>
+    :root{
+      --bg: #f7fbff; /* very light blue */
+      --card: #ffffff;
+      --muted: #7b8ea3;
+      --accent: #7dd3fc; /* sky */
+      --accent-2: #c7b8ff; /* lavender */
+      --glass: rgba(255,255,255,0.72);
+      --shadow: 0 8px 30px rgba(38,57,77,0.08);
+      --radius: 14px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial}
+    body{background:linear-gradient(180deg, var(--bg), #ffffff); color:#153243;}
 
-        ul {
-            list-style: none;
-            padding: 20px;
-            max-width: 700px;
-            margin: 20px auto;
-        }
+    /* full-screen 3d canvas layer */
+    #bg3d{
+      position:fixed;inset:0;z-index:0;pointer-events:none;mix-blend-mode:screen;opacity:0.98
+    }
 
-        ul li {
-            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-            border-radius: 12px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            margin-bottom: 15px;
-            padding: 15px 50px 15px 15px;
-            position: relative;
-            font-size: 18px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
+    .container{
+      position:relative;z-index:2;max-width:1100px;margin:40px auto;padding:28px;
+    }
 
-        ul li:nth-child(2n) {
-            background: linear-gradient(135deg, #a18cd1, #fbc2eb);
-        }
+    .header{
+      display:flex;align-items:center;justify-content:space-between;margin-bottom:18px
+    }
 
-        ul li:nth-child(3n) {
-            background: linear-gradient(135deg, #f6d365, #fda085);
-        }
+    .logo{display:flex;align-items:center;gap:14px}
+    .brand-mark{
+      width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:20px;box-shadow:0 6px 20px rgba(125,211,252,0.18)
+    }
+    h1{margin:0;font-size:20px}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
 
-        ul li:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 18px rgba(0,0,0,0.25);
-        }
+    .layout{
+      display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start
+    }
 
-        .delete-btn {
-            color: #e74c3c;
-            position: absolute;
-            right: 10px;
-            top: 12px;
-            font-size: 18px;
-            text-decoration: none;
-            font-weight: bold;
-        }
+    /* main card */
+    .card{
+      background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);backdrop-filter:blur(6px);
+    }
 
-        .delete-btn:hover {
-            color: #c0392b;
-        }
+    .create-row{display:flex;gap:12px;margin-bottom:16px}
+    .input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid #e7eef6;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.01));font-size:14px}
+    .btn{
+      background:linear-gradient(180deg,var(--accent),#4fc3f7);border:none;padding:10px 16px;border-radius:12px;color:#042233;font-weight:600;cursor:pointer;box-shadow:0 6px 14px rgba(79,195,247,0.18);
+    }
 
-        .edit-btn {
-            color: #f39c12;
-            position: absolute;
-            right: 40px;
-            top: 12px;
-            font-size: 18px;
-            text-decoration: none;
-            font-weight: bold;
-        }
+    ul.todos{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+    li.todo{
+      display:flex;align-items:center;justify-content:space-between;padding:14px;border-radius:12px;border:1px solid #eef7fb;background:linear-gradient(180deg,var(--glass),#ffffff);
+      transition:transform .28s ease, box-shadow .28s ease;cursor:grab
+    }
+    li.todo:hover{transform:translateY(-6px);box-shadow:0 18px 35px rgba(18,46,73,0.06)}
 
-        .edit-btn:hover {
-            color: #e67e22;
-        }
+    .todo-left{display:flex;align-items:center;gap:12px}
+    .checkbox{width:20px;height:20px;border-radius:6px;border:2px solid #e1f5fb;display:grid;place-items:center}
+    .todo-title{font-weight:600}
+    .todo-meta{font-size:12px;color:var(--muted)}
 
-        form {
-            background: white;
-            padding: 25px;
-            margin: 30px auto;
-            max-width: 700px;
-            border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-        }
+    .right-actions{display:flex;gap:10px;align-items:center}
+    .pill{padding:6px 10px;border-radius:999px;background:linear-gradient(90deg,#fff,#f6f9ff);font-size:12px;border:1px solid #eef6ff}
 
-        label {
-            display: block;
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #444;
-            font-weight: bold;
-        }
+    /* side panel */
+    .side{
+      position:relative;min-height:300px
+    }
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+    .stat{background:linear-gradient(180deg,#ffffff, #fbfdff);padding:12px;border-radius:12px;box-shadow:var(--shadow);}
 
-        input[type="text"] {
-            width: 100%;
-            padding: 14px;
-            margin-bottom: 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 16px;
-            outline: none;
-        }
+    /* subtle decorative 3D card */
+    .floating-card{
+      margin-top:18px;padding:16px;border-radius:14px;background:linear-gradient(180deg,rgba(199,184,255,0.12),rgba(125,211,252,0.06));border:1px solid rgba(160,145,255,0.12);
+      box-shadow: 0 18px 30px rgba(125,109,255,0.06);
+    }
 
-        input[type="text"]:focus {
-            border-color: #6a11cb;
-            box-shadow: 0 0 6px rgba(106, 17, 203, 0.4);
-        }
-
-        input[type="submit"] {
-            background: linear-gradient(135deg, #6a11cb, #2575fc);
-            color: white;
-            border: none;
-            padding: 14px 25px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: 0.3s ease;
-        }
-
-        input[type="submit"]:hover {
-            background: linear-gradient(135deg, #8e2de2, #4a00e0);
-            transform: scale(1.05);
-        }
-    </style>
+    /* responsive */
+    @media(max-width:880px){
+      .layout{grid-template-columns:1fr;}
+      .container{padding:18px}
+    }
+  </style>
 </head>
 <body>
-    <h1>🌈 Welcome To Suchith's DevOps Session 🌈<br>Write your plan on Learning Jenkins</h1>
+  <!-- 3D canvas (Three.js) -->
+  <canvas id="bg3d"></canvas>
 
-    <ul>
-        <% todolist.forEach(function(todo, index) { %>
-        <li>
-            <a href="/todo/delete/<%= index %>" class="delete-btn">✘</a>
-            <a href="/todo/<%= index %>" class="edit-btn">✎</a>
-            <%- todo %>
-        </li>
-        <% }); %>
-    </ul>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <div class="brand-mark">TD</div>
+        <div>
+          <h1>Todo — Light & 3D UI</h1>
+          <p class="lead">A soft pastel theme with subtle 3D motion.
+          </p>
+        </div>
+      </div>
+      <div>
+        <!-- small profile / control -->
+        <div style="display:flex;gap:10px;align-items:center">
+          <div style="text-align:right">
+            <div style="font-weight:600">Welcome</div>
+            <div style="font-size:12px;color:var(--muted)">Today — <%= new Date().toDateString() %></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <form action="/todo/add/" method="post">
-        <label for="newtodo">💡 What should I do?</label>
-        <input type="text" name="newtodo" id="newtodo" placeholder="Enter your Jenkins learning task..." autofocus />
-        <input type="submit" value="➕ Add Task" />
-    </form>
+    <div class="layout">
+      <div class="card">
+        <div class="create-row">
+          <form id="addForm" style="display:flex;flex:1;gap:12px;width:100%" onsubmit="return false;">
+            <input id="newTodo" class="input" placeholder="Add a new task, e.g. Finish project report" />
+            <button id="addBtn" class="btn">Add</button>
+          </form>
+        </div>
+
+        <ul id="todoList" class="todos">
+          <% if (todos && todos.length) { %>
+            <% todos.forEach(function(todo){ %>
+              <li class="todo" data-id="<%= todo.id %>">
+                <div class="todo-left">
+                  <div class="checkbox" onclick="toggleComplete('<%= todo.id %>')">
+                    <% if (todo.done) { %>
+                      ✓
+                    <% } %>
+                  </div>
+                  <div>
+                    <div class="todo-title"><%= todo.title %></div>
+                    <div class="todo-meta">Created: <%= new Date(todo.createdAt).toLocaleString() %></div>
+                  </div>
+                </div>
+                <div class="right-actions">
+                  <div class="pill" onclick="editTodo('<%= todo.id %>')">Edit</div>
+                  <div class="pill" onclick="deleteTodo('<%= todo.id %>')">Delete</div>
+                </div>
+              </li>
+            <% }); %>
+          <% } else { %>
+            <li style="text-align:center;color:var(--muted);padding:30px;border-radius:12px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.01))">No tasks yet — add your first one!</li>
+          <% } %>
+        </ul>
+
+      </div>
+
+      <aside class="side">
+        <div class="stat card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:13px;color:var(--muted)">Tasks</div>
+              <div style="font-weight:700;font-size:20px" id="taskCount"><%= todos ? todos.length : 0 %></div>
+            </div>
+            <div style="font-size:22px">📋</div>
+          </div>
+        </div>
+
+        <div class="floating-card card">
+          <div style="font-weight:700">Tips & Quick Actions</div>
+          <ul style="margin:10px 0 0 14px;color:var(--muted)">
+            <li>Use descriptive task names.</li>
+            <li>Mark tasks complete when done.</li>
+            <li>Try dragging (coming soon) for prioritization.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+  </div>
+
+  <!-- Minimal JS to wire UI + Three.js background animation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r152/three.min.js"></script>
+  <script>
+    // Basic UI behaviour (works with typical Express endpoints)
+    const addBtn = document.getElementById('addBtn');
+    const newTodo = document.getElementById('newTodo');
+    const todoList = document.getElementById('todoList');
+    const taskCount = document.getElementById('taskCount');
+
+    addBtn.addEventListener('click', async () => {
+      const title = newTodo.value.trim();
+      if(!title) return newTodo.focus();
+      // optimistic UI: append to list locally. Replace this block with an actual POST to your server (fetch('/todos',...)).
+      const id = 'tmp-' + Date.now();
+      const li = document.createElement('li'); li.className='todo'; li.dataset.id=id;
+      li.innerHTML = `\n        <div class="todo-left">\n          <div class="checkbox"> </div>\n          <div>\n            <div class="todo-title">${escapeHtml(title)}</div>\n            <div class="todo-meta">Created: ${new Date().toLocaleString()}</div>\n          </div>\n        </div>\n        <div class="right-actions">\n          <div class="pill" onclick="editTodo('${id}')">Edit</div>\n          <div class="pill" onclick="deleteTodo('${id}')">Delete</div>\n        </div>`;
+      todoList.prepend(li);
+      newTodo.value='';
+      taskCount.innerText = (parseInt(taskCount.innerText||0) + 1);
+    });
+
+    function escapeHtml(str){return str.replace(/[&<>\"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+    function toggleComplete(id){ /* wire to backend */ }
+    function editTodo(id){ alert('Edit — implement your edit UI/server call for id: '+id) }
+    function deleteTodo(id){
+      const el = document.querySelector('li.todo[data-id="'+id+'"]');
+      if(el) el.remove();
+      taskCount.innerText = Math.max(0, parseInt(taskCount.innerText||0)-1);
+    }
+
+    // ------------------ Three.js floating blobs background ------------------
+    const canvas = document.getElementById('bg3d');
+    const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 1000);
+    camera.position.z = 40;
+
+    const light = new THREE.DirectionalLight(0xffffff, 0.9);
+    light.position.set(0,1,1);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0xffffff,0.6));
+
+    // create several soft spheres with pastel materials
+    const blobs = [];
+    const pastel = [0x7dd3fc, 0xc7b8ff, 0xffe7f3, 0xd1fbe6].map(c=>new THREE.Color(c));
+
+    for(let i=0;i<14;i++){
+      const geo = new THREE.IcosahedronGeometry(3 + Math.random()*3, 3);
+      const mat = new THREE.MeshStandardMaterial({color: pastel[i % pastel.length], roughness:0.6, metalness:0.1, transparent:true, opacity:0.85});
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set((Math.random()-0.5)*80, (Math.random()-0.5)*50, (Math.random()-0.5)*60);
+      m.scale.multiplyScalar(0.6 + Math.random()*1.4);
+      scene.add(m); blobs.push(m);
+    }
+
+    function onResize(){
+      camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight);
+    }
+    onResize(); window.addEventListener('resize', onResize);
+
+    let t=0;
+    function animate(){
+      t += 0.008;
+      for(let i=0;i<blobs.length;i++){
+        const b = blobs[i];
+        b.rotation.x += 0.002 + i*0.0002;
+        b.rotation.y += 0.001 + i*0.0003;
+        b.position.x += Math.sin(t*0.6 + i)*0.02;
+        b.position.y += Math.cos(t*0.4 + i)*0.02;
+      }
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+  </script>
+
 </body>
 </html>
